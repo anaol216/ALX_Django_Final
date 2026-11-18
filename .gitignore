@@ -18,6 +18,13 @@ media/
 
 # Environment variables
 .env
+.env.local
+.env.*.local
+
+# Test & coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
 
 # IDE / Editor files
 .vscode/
