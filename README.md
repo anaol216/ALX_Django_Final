@@ -400,29 +400,46 @@ You can run the entire application inside Docker containers using Docker Compose
 
 ## Postman Setup & Usage
 
-A pre-configured Postman collection is included in the root of the project: `postman_collection.json`.
+A comprehensive, reusable Postman collection is included in the project root: [`postman_collection.json`](postman_collection.json). It provides full automated testing across all HTTP methods, valid/invalid inputs, non-existent IDs, status codes, response schemas, and automated assertions.
+
+### What is Tested:
+- **HTTP Methods**: Full coverage of `GET`, `POST`, `PUT`, `PATCH`, and `DELETE` requests.
+- **Status Codes Verified**:
+  - `200 OK`: Successful retrieval and updates (PUT & PATCH).
+  - `201 Created`: Successful creation of categories and products.
+  - `204 No Content`: Successful deletion (with empty response body verified).
+  - `400 Bad Request`: Validation failures (missing required fields, blank names, duplicate category names, invalid foreign key IDs, invalid decimal prices, negative stock numbers).
+  - `404 Not Found`: Non-existent category/product IDs (`99999`) across GET, PUT, and DELETE.
+- **Automated Assertions**:
+  - Validates `pm.response.to.have.status(...)` on every request.
+  - Validates `Content-Type: application/json` where applicable.
+  - Validates JSON payload structures, expected property types, and exact field values.
+  - Checks specific error message fields in 400 Bad Request responses.
+- **Dynamic Variable Chaining**:
+  - POST requests dynamically persist `category_id`, `temp_category_id`, and `product_id` into collection variables via `pm.collectionVariables.set()`.
+  - Subsequent GET, PUT, PATCH, and DELETE requests automatically use these variables without manual ID copying.
 
 ### How to Import and Use:
 1. Open **Postman**.
-2. Click **Import** (top left).
-3. Drag and drop `postman_collection.json` or browse to select it.
+2. Click **Import** (top-left).
+3. Select or drag and drop [`postman_collection.json`](postman_collection.json).
 4. The **E-Commerce Product API** collection will appear in your sidebar.
 
 ### Collection Variables:
-The collection includes pre-defined variables:
-- `base_url`: Defaults to `http://localhost:8000`
-- `category_id`: Defaults to `1`
-- `product_id`: Defaults to `1`
+| Variable | Default Value | Description |
+|---|---|---|
+| `base_url` | `http://localhost:8000` | Target API root host |
+| `category_id` | `1` | Dynamically updated upon category creation |
+| `temp_category_id` | `1` | Dynamically created and used for category DELETE testing |
+| `product_id` | `1` | Dynamically updated upon product creation |
+| `invalid_id` | `99999` | Used for negative 404 tests |
 
-### Suggested Request Execution Flow:
-1. **Categories > Create Category**: Creates a category (e.g. `Electronics`).
-2. **Categories > List Categories**: Confirms the category is returned with ID `1`.
-3. **Products > Create Product**: Creates a product associated with `category: 1`.
-4. **Products > List Products**: Verifies product listing and nested `category_name`.
-5. **Products > Get Product Detail**: Fetches the created product by ID.
-6. **Products > Update Product**: Updates product price, name, or stock.
-7. **Products > Delete Product**: Removes the product.
-8. **Categories > Delete Category**: Removes the category once products are deleted.
+### Running Automated Tests with Collection Runner:
+1. Select the **E-Commerce Product API** collection in Postman.
+2. Click **Run** (or open the **Collection Runner**).
+3. Ensure all 27 requests are selected in the pre-configured order.
+4. Click **Run E-Commerce Product API**.
+5. All test assertions will execute automatically and show green passing checks!
 
 ---
 

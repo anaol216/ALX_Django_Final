@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "c1f7a4d2-7b3b-4c6e-8d9e-e3a5f8b9d0a1",
     "name": "E-Commerce Product API",
-    "description": "API collection for E-Commerce Product and Category endpoints.",
+    "description": "Comprehensive Postman test collection for E-Commerce Category and Product API endpoints. Covers GET, POST, PUT, PATCH, and DELETE operations, valid/invalid inputs, non-existent IDs, and automated Postman test assertions.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -17,34 +17,58 @@
       "type": "string"
     },
     {
+      "key": "temp_category_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
       "key": "product_id",
       "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "invalid_id",
+      "value": "99999",
       "type": "string"
     }
   ],
   "item": [
     {
-      "name": "Categories",
+      "name": "1. Categories",
       "item": [
         {
-          "name": "List Categories",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
+          "name": "1.1 Create Category (POST - Valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Category created with correct fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('description');",
+                  "    pm.expect(jsonData).to.have.property('created_at');",
+                  "    pm.expect(jsonData).to.have.property('updated_at');",
+                  "    pm.expect(jsonData.name).to.eql('Consumer Electronics');",
+                  "    pm.expect(jsonData.description).to.eql('Smartphones, laptops, and gadgets');",
+                  "",
+                  "    // Dynamically persist category_id for downstream requests",
+                  "    pm.collectionVariables.set('category_id', jsonData.id.toString());",
+                  "});"
+                ],
+                "type": "text/javascript"
               }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/categories/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "categories", ""]
             }
-          }
-        },
-        {
-          "name": "Create Category",
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -59,17 +83,92 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Electronic gadgets and accessories\"\n}"
+              "raw": "{\n  \"name\": \"Consumer Electronics\",\n  \"description\": \"Smartphones, laptops, and gadgets\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/categories/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "categories", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                ""
+              ]
             }
           }
         },
         {
-          "name": "Get Category Detail",
+          "name": "1.2 List Categories (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array of categories\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData.length).to.be.at.least(1);",
+                  "});",
+                  "",
+                  "pm.test(\"Contains newly created category\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var targetId = parseInt(pm.collectionVariables.get('category_id'), 10);",
+                  "    var found = jsonData.some(function(item) { return item.id === targetId; });",
+                  "    pm.expect(found).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.3 Get Category Detail (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Category detail matches category_id\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var expectedId = parseInt(pm.collectionVariables.get('category_id'), 10);",
+                  "    pm.expect(jsonData.id).to.eql(expectedId);",
+                  "    pm.expect(jsonData.name).to.eql('Consumer Electronics');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -80,13 +179,39 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/categories/{{category_id}}/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "categories", "{{category_id}}", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{category_id}}",
+                ""
+              ]
             }
           }
         },
         {
-          "name": "Update Category",
+          "name": "1.4 Update Category - Full (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All fields updated successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.name).to.eql('Electronics & Devices');",
+                  "    pm.expect(jsonData.description).to.eql('Updated description for tech gadgets');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
             "header": [
@@ -101,51 +226,426 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Electronics & Gadgets\",\n  \"description\": \"Updated description\"\n}"
+              "raw": "{\n  \"name\": \"Electronics & Devices\",\n  \"description\": \"Updated description for tech gadgets\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/categories/{{category_id}}/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "categories", "{{category_id}}", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{category_id}}",
+                ""
+              ]
             }
           }
         },
         {
-          "name": "Delete Category",
+          "name": "1.5 Update Category - Partial (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Partial update applied without modifying name\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.description).to.eql('Patched description only');",
+                  "    pm.expect(jsonData.name).to.eql('Electronics & Devices');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Patched description only\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{category_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{category_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.6 Test Invalid Category Input - Missing Name (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Validation error specifies 'name' is required\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData.name).to.be.an('array');",
+                  "    pm.expect(jsonData.name[0]).to.include('required');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.7 Test Invalid Category Input - Blank Name (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Validation error specifies 'name' cannot be blank\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData.name[0]).to.include('blank');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.8 Test Invalid Category Input - Duplicate Name (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Unique constraint error returned for 'name'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData.name[0]).to.include('already exists');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electronics & Devices\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.9 Test Invalid Category ID - Non-existent ID (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body contains 'detail' not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('detail');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{invalid_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{invalid_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.10 Create Temporary Category to Delete (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('temp_category_id', jsonData.id.toString());"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Temporary Category To Delete\",\n  \"description\": \"Will be deleted immediately\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.11 Delete Category (DELETE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is empty\", function () {",
+                  "    pm.expect(pm.response.text()).to.eql('');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/categories/{{category_id}}/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "categories", "{{category_id}}", ""]
+              "raw": "{{base_url}}/api/categories/{{temp_category_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{temp_category_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.12 Test Delete Invalid Category ID - Non-existent (DELETE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body contains 'detail'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('detail');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{invalid_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{invalid_id}}",
+                ""
+              ]
             }
           }
         }
       ]
     },
     {
-      "name": "Products",
+      "name": "2. Products",
       "item": [
         {
-          "name": "List Products",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
+          "name": "2.1 Create Product (POST - Valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"Product created with correct attributes\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('price');",
+                  "    pm.expect(jsonData).to.have.property('stock_quantity');",
+                  "    pm.expect(jsonData).to.have.property('category');",
+                  "    pm.expect(jsonData).to.have.property('category_name');",
+                  "    pm.expect(jsonData.name).to.eql('Wireless Noise-Canceling Headphones');",
+                  "    pm.expect(jsonData.price).to.eql('149.99');",
+                  "    pm.expect(jsonData.stock_quantity).to.eql(50);",
+                  "    pm.expect(jsonData.category_name).to.eql('Electronics & Devices');",
+                  "",
+                  "    // Dynamically persist product_id for downstream requests",
+                  "    pm.collectionVariables.set('product_id', jsonData.id.toString());",
+                  "});"
+                ],
+                "type": "text/javascript"
               }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/",
-              "host": ["{{base_url}}"],
-              "path": ["api", ""]
             }
-          }
-        },
-        {
-          "name": "Create Product",
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -160,17 +660,91 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"category\": 1,\n  \"name\": \"Wireless Noise-Canceling Headphones\",\n  \"description\": \"Premium over-ear headphones with Bluetooth 5.2\",\n  \"price\": \"149.99\",\n  \"stock_quantity\": 40,\n  \"is_active\": true\n}"
+              "raw": "{\n  \"category\": {{category_id}},\n  \"name\": \"Wireless Noise-Canceling Headphones\",\n  \"description\": \"Bluetooth 5.2 headphones with 40-hour battery life\",\n  \"price\": \"149.99\",\n  \"stock_quantity\": 50,\n  \"is_active\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/",
-              "host": ["{{base_url}}"],
-              "path": ["api", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                ""
+              ]
             }
           }
         },
         {
-          "name": "Get Product Detail",
+          "name": "2.2 List Products (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array of products\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData.length).to.be.at.least(1);",
+                  "});",
+                  "",
+                  "pm.test(\"Contains newly created product\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var targetId = parseInt(pm.collectionVariables.get('product_id'), 10);",
+                  "    var found = jsonData.some(function(p) { return p.id === targetId; });",
+                  "    pm.expect(found).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.3 Get Product Detail (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Product detail matches product_id\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var expectedId = parseInt(pm.collectionVariables.get('product_id'), 10);",
+                  "    pm.expect(jsonData.id).to.eql(expectedId);",
+                  "    pm.expect(jsonData.name).to.eql('Wireless Noise-Canceling Headphones');",
+                  "    pm.expect(jsonData.price).to.eql('149.99');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -181,13 +755,39 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/{{product_id}}/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "{{product_id}}", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "{{product_id}}",
+                ""
+              ]
             }
           }
         },
         {
-          "name": "Update Product",
+          "name": "2.4 Update Product - Full (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Product fully updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.name).to.eql('Pro Wireless Noise-Canceling Headphones');",
+                  "    pm.expect(jsonData.price).to.eql('179.99');",
+                  "    pm.expect(jsonData.stock_quantity).to.eql(40);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
             "header": [
@@ -202,24 +802,488 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"category\": 1,\n  \"name\": \"Wireless Noise-Canceling Headphones (Updated)\",\n  \"description\": \"Updated description\",\n  \"price\": \"129.99\",\n  \"stock_quantity\": 35,\n  \"is_active\": true\n}"
+              "raw": "{\n  \"category\": {{category_id}},\n  \"name\": \"Pro Wireless Noise-Canceling Headphones\",\n  \"description\": \"Upgraded studio acoustics and active ANC\",\n  \"price\": \"179.99\",\n  \"stock_quantity\": 40,\n  \"is_active\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/{{product_id}}/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "{{product_id}}", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "{{product_id}}",
+                ""
+              ]
             }
           }
         },
         {
-          "name": "Delete Product",
+          "name": "2.5 Update Product - Partial (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Partial fields updated without changing name\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.price).to.eql('169.99');",
+                  "    pm.expect(jsonData.stock_quantity).to.eql(35);",
+                  "    pm.expect(jsonData.name).to.eql('Pro Wireless Noise-Canceling Headphones');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": \"169.99\",\n  \"stock_quantity\": 35\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/{{product_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "{{product_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.6 Test Invalid Product Input - Missing Fields (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error returned for required fields (category, name, price)\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('category');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('price');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.7 Test Invalid Product Input - Non-existent Category (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error indicates category object does not exist\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('category');",
+                  "    pm.expect(jsonData.category[0]).to.include('does not exist');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": 99999,\n  \"name\": \"Orphan Product\",\n  \"price\": \"49.99\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.8 Test Invalid Product Input - Invalid Price (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Validation error specifies valid number required for price\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('price');",
+                  "    pm.expect(jsonData.price[0]).to.include('valid number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": {{category_id}},\n  \"name\": \"Invalid Price Product\",\n  \"price\": \"not-a-number\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.9 Test Invalid Product Input - Negative Stock Quantity (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Validation error specifies stock must be >= 0\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('stock_quantity');",
+                  "    pm.expect(jsonData.stock_quantity[0]).to.include('greater than or equal to 0');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": {{category_id}},\n  \"name\": \"Negative Stock Product\",\n  \"price\": \"29.99\",\n  \"stock_quantity\": -5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.10 Test Invalid Product ID - Non-existent ID (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body contains 'detail' not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('detail');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{invalid_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "{{invalid_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.11 Test Invalid Product ID - Non-existent (DELETE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body contains 'detail' not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('detail');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/{{invalid_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "{{invalid_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.12 Delete Product (DELETE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is empty\", function () {",
+                  "    pm.expect(pm.response.text()).to.eql('');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/{{product_id}}/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "{{product_id}}", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "{{product_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.13 Verify Product Deleted (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{product_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "{{product_id}}",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Cleanup",
+      "item": [
+        {
+          "name": "3.1 Delete Primary Category (DELETE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{category_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{category_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.2 Verify Category Deleted (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{category_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{category_id}}",
+                ""
+              ]
             }
           }
         }
@@ -227,4 +1291,3 @@
     }
   ]
 }
-

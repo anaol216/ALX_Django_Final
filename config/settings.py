@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, True),
     SECRET_KEY=(str, "django-insecure-tsrv=k5#h8(nvwn$6ggj7eiy_c@c+kgew*%a^d*nv76b%()b6f"),
-    ALLOWED_HOSTS=(list, ["127.0.0.1", "localhost"]),
+    ALLOWED_HOSTS=(list, ["127.0.0.1", "localhost", "testserver"]),
 )
 
 # Take environment variables from .env file if it exists
